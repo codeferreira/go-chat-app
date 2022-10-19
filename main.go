@@ -7,25 +7,34 @@ import (
 	"github.com/codeferreira/realtime-chat-app/pkg/websocket"
 )
 
-func serverWs(writer http.ResponseWriter, request *http.Request) {
+func serverWs(pool *websocket.Pool, writer http.ResponseWriter, request *http.Request) {
 	fmt.Println(request.Host)
-
-	ws, err := websocket.Upgrade(writer, request)
+	connection, err := websocket.Upgrade(writer, request)
 
 	if err != nil {
 		fmt.Println(writer, "%+V\n", err)
 	}
 
-	go websocket.Writer(ws)
-	websocket.Reader(ws)
+	client := &websocket.Client{
+		Conn: connection,
+		Pool: pool,
+	}
+
+	pool.Register <- client
+	client.Read()
 }
 
 func setupRoutes() {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, "Simple Server")
-	})
+	fs := http.FileServer(http.Dir("./web"))
 
-	http.HandleFunc("/ws", serverWs)
+	http.Handle("/", fs)
+
+	pool := websocket.NewPool()
+	go pool.Start()
+
+	http.HandleFunc("/ws", func(writer http.ResponseWriter, request *http.Request) {
+		serverWs(pool, writer, request)
+	})
 }
 
 func main() {
