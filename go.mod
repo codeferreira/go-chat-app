@@ -1,4 +1,4 @@
-module realtime-chat-app
+module github.com/codeferreira/realtime-chat-app
 
 go 1.19
 
