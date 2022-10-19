@@ -4,20 +4,20 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/codeferreira/realtime-chat-app/pkg/client"
+	"github.com/codeferreira/realtime-chat-app/pkg/websocket"
 )
 
 func serverWs(writer http.ResponseWriter, request *http.Request) {
 	fmt.Println(request.Host)
 
-	ws, err := client.Upgrade(writer, request)
+	ws, err := websocket.Upgrade(writer, request)
 
 	if err != nil {
 		fmt.Println(writer, "%+V\n", err)
 	}
 
-	go client.Writer(ws)
-	client.Reader(ws)
+	go websocket.Writer(ws)
+	websocket.Reader(ws)
 }
 
 func setupRoutes() {
